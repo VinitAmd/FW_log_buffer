@@ -8,6 +8,7 @@
 
 struct mailbox;
 struct mailbox_channel;
+struct amdxdna_dev_hdl;
 
 /*
  * xdna_mailbox_msg - message struct
@@ -132,6 +133,8 @@ void xdna_mailbox_stop_channel(struct mailbox_channel *mailbox_chann);
  */
 int xdna_mailbox_send_msg(struct mailbox_channel *mailbox_chann,
 			  struct xdna_mailbox_msg *msg, u64 tx_timeout);
+
+void clear_logbuff_irq(uint32_t mailbox_int_addr, struct amdxdna_dev_hdl *ndev);
 
 #if defined(CONFIG_DEBUG_FS)
 /*

@@ -314,7 +314,7 @@ static int aie2_mgmt_fw_query(struct amdxdna_dev_hdl *ndev)
 static void aie2_mgmt_fw_fini(struct amdxdna_dev_hdl *ndev)
 {
 	if (aie2_suspend_fw(ndev))
-		XDNA_ERR(ndev->xdna, "suspend_fw failed");
+			XDNA_ERR(ndev->xdna, "suspend_fw failed");
 	XDNA_DBG(ndev->xdna, "npu firmware suspended");
 }
 
@@ -615,6 +615,12 @@ skip_pasid:
 		goto async_event_free;
 	}
 
+	ret = aie2_start_event_trace_send(ndev);
+	if(ret) {
+		XDNA_ERR(xdna, "Send start event trace failed, ret %d", ret);
+		goto event_trace_free;
+	}
+
 	/* Just to make sure firmware handled async events */
 	ret = aie2_query_firmware_version(ndev, &ndev->xdna->fw_ver);
 	if (ret) {
@@ -627,6 +633,8 @@ skip_pasid:
 
 async_event_free:
 	aie2_error_async_events_free(ndev);
+event_trace_free:
+	aie2_event_trace_free(ndev);
 stop_hw:
 	aie2_hw_stop(xdna);
 disable_sva:
@@ -644,7 +652,11 @@ static void aie2_fini(struct amdxdna_dev *xdna)
 	struct pci_dev *pdev = to_pci_dev(xdna->ddev.dev);
 	struct amdxdna_dev_hdl *ndev = xdna->dev_handle;
 
+	if (ndev && ndev->dev_status >= AIE2_DEV_START) {
+		aie2_stop_event_trace_send(ndev);
+	}
 	aie2_hw_stop(xdna);
+	aie2_event_trace_free(ndev);
 	aie2_error_async_events_free(ndev);
 #ifdef AMDXDNA_DEVEL
 	if (iommu_mode != AMDXDNA_IOMMU_PASID)

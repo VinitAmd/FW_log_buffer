@@ -25,6 +25,7 @@
 #include <linux/irqreturn.h>
 #include "amdxdna_trace.h"
 #include "amdxdna_mailbox.h"
+#include "aie2_pci.h"
 
 #define MB_ERR(chann, fmt, args...) \
 ({ \
@@ -491,6 +492,13 @@ race:
 	mailbox_reg_write(mb_chann, mb_chann->iohub_int_addr, 0);
 	queue_work(mb_chann->work_q, &mb_chann->rx_work);
 	return IRQ_HANDLED;
+}
+
+void clear_logbuff_irq(uint32_t mailbox_int_addr, struct amdxdna_dev_hdl *ndev)
+{
+	struct mailbox_channel *mb_chann = ndev->mgmt_chann;
+	/* Clear IOHUB register */
+	mailbox_reg_write(mb_chann, mailbox_int_addr, 0);
 }
 
 #ifdef AMDXDNA_DEVEL

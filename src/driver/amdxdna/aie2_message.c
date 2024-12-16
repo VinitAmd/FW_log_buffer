@@ -16,6 +16,9 @@
 #define DECLARE_AIE2_MSG(name, op) \
 	DECLARE_XDNA_MSG_COMMON(name, op, MAX_AIE2_STATUS_CODE)
 
+#define DECLARE_AIE2_STOP_EVENT_TRACE_MSG(name, op) \
+	DECLARE_XDNA_STOP_EVENT_TRACE_MSG(name, op, MAX_AIE2_STATUS_CODE)
+
 #define aie2_send_mgmt_msg_wait(ndev, msg) \
 	aie2_send_mgmt_msg_wait_offset(ndev, msg, 0)
 
@@ -253,6 +256,29 @@ int aie2_query_firmware_version(struct amdxdna_dev_hdl *ndev,
 	fw_ver->build = resp.build;
 
 	return 0;
+}
+
+int aie2_start_event_trace(struct amdxdna_dev_hdl *ndev, dma_addr_t addr,
+										u32 size, void *handle)
+{
+	DECLARE_AIE2_MSG(start_event_trace, MSG_OP_START_EVENT_TRACE);
+
+	req.dram_buffer_address = addr;
+	req.dram_buffer_size = size;
+	req.event_trace_dest = EVENT_TRACE_DEST_DRAM;
+	req.event_trace_categories = 0xFFFFFFFF;
+	req.event_trace_timestamp = EVENT_TRACE_TIMESTAMP_CPU_CCOUNT;
+
+	XDNA_INFO(ndev->xdna, "send start event trace msg");
+	return aie2_send_mgmt_msg_wait(ndev, &msg);
+}
+
+int aie2_stop_event_trace(struct amdxdna_dev_hdl *ndev)
+{
+	DECLARE_AIE2_STOP_EVENT_TRACE_MSG(stop_event_trace, MSG_OP_STOP_EVENT_TRACE);
+
+	XDNA_INFO(ndev->xdna, "send stop event trace msg");
+	return aie2_send_mgmt_msg_wait(ndev, &msg);
 }
 
 int aie2_create_context(struct amdxdna_dev_hdl *ndev, struct amdxdna_hwctx *hwctx)
