@@ -230,9 +230,10 @@ struct amdxdna_dev_hdl {
 	bool				clk_gate_enabled;
 
 	/* Mailbox and the management channel */
-	struct mailbox			*mbox;
+	struct mailbox				*mbox;
 	struct mailbox_channel		*mgmt_chann;
-	struct async_events		*async_events;
+	struct async_events			*async_events;
+	struct event_trace_req_buf 	*event_trace_req;
 };
 
 #define DEFINE_BAR_OFFSET(reg_name, bar, reg_addr) \
@@ -317,6 +318,11 @@ void aie2_error_async_events_free(struct amdxdna_dev_hdl *ndev);
 int aie2_error_async_events_send(struct amdxdna_dev_hdl *ndev);
 int aie2_error_async_msg_thread(void *data);
 
+/* aie2_event.c */
+int aie2_event_trace_alloc(struct amdxdna_dev_hdl *ndev);
+void aie2_event_trace_free(struct amdxdna_dev_hdl *ndev);
+int aie2_start_event_trace_send(struct amdxdna_dev_hdl *ndev);
+
 /* aie2_message.c */
 int aie2_suspend_fw(struct amdxdna_dev_hdl *ndev);
 int aie2_resume_fw(struct amdxdna_dev_hdl *ndev);
@@ -336,6 +342,8 @@ int aie2_map_host_buf(struct amdxdna_dev_hdl *ndev, u32 context_id, u64 addr, u6
 int aie2_query_status(struct amdxdna_dev_hdl *ndev, char *buf, u32 size, u32 *cols_filled);
 int aie2_register_asyn_event_msg(struct amdxdna_dev_hdl *ndev, dma_addr_t addr, u32 size,
 				 void *handle, int (*cb)(void*, const u32 *, size_t));
+int aie2_start_event_trace_msg(struct amdxdna_dev_hdl *ndev, dma_addr_t addr, u32 size,
+				 void *handle);
 int aie2_self_test(struct amdxdna_dev_hdl *ndev);
 #ifdef AMDXDNA_DEVEL
 int aie2_register_pdis(struct amdxdna_hwctx *hwctx);

@@ -586,11 +586,25 @@ skip_pasid:
 		goto async_event_free;
 	}
 
+	ret = aie2_event_trace_alloc(ndev);
+	if (ret) {
+		XDNA_ERR(xdna, "vs- allocate event trace failed, ret %d", ret);
+		goto event_trace_free;
+	}
+
+	ret = aie2_start_event_trace_send(ndev);
+	if(ret) {
+		XDNA_ERR(xdna, "vs- send start event trace failed, ret %d", ret);
+		goto event_trace_free;
+	}
+
 	release_firmware(fw);
 	return 0;
 
 async_event_free:
 	aie2_error_async_events_free(ndev);
+event_trace_free:
+	aie2_event_trace_free(ndev);
 stop_hw:
 	aie2_hw_stop(xdna);
 disable_sva:

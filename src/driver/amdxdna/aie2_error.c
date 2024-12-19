@@ -218,11 +218,13 @@ static int aie2_error_async_cb(void *handle, const u32 *data, size_t size)
 		e->resp.status = resp->status;
 	}
 	queue_work(e->wq, &e->work);
+	printk(KERN_ERR "vs- aie2_error_async_cb\n");
 	return 0;
 }
 
 static int aie2_error_event_send(struct async_event *e)
 {
+	printk(KERN_ERR "vs- aie2_error_event_send\n");
 	drm_clflush_virt_range(e->buf, e->size); /* device can access */
 	return aie2_register_asyn_event_msg(e->ndev, e->addr, e->size, e,
 					    aie2_error_async_cb);
@@ -245,6 +247,7 @@ static void aie2_error_worker(struct work_struct *err_work)
 
 	e->resp.status = MAX_AIE2_STATUS_CODE;
 
+	printk(KERN_ERR "vs- aie2_error_worker\n");
 	print_hex_dump_debug("AIE error: ", DUMP_PREFIX_OFFSET, 16, 4,
 			     e->buf, 0x100, false);
 
@@ -275,6 +278,7 @@ int aie2_error_async_events_send(struct amdxdna_dev_hdl *ndev)
 	struct async_event *e;
 	int i, ret;
 
+	printk(KERN_ERR "vs- aie2_error_async_events_send\n");
 	drm_WARN_ON(&xdna->ddev, !mutex_is_locked(&xdna->dev_lock));
 	for (i = 0; i < ndev->async_events->event_cnt; i++) {
 		e = &ndev->async_events->event[i];
@@ -297,6 +301,7 @@ void aie2_error_async_events_free(struct amdxdna_dev_hdl *ndev)
 	destroy_workqueue(events->wq);
 	mutex_lock(&xdna->dev_lock);
 
+	printk(KERN_ERR "vs- aie2_error_async_events_free\n");
 	dma_free_noncoherent(xdna->ddev.dev, events->size, events->buf,
 			     events->addr, DMA_BIDIRECTIONAL);
 	kfree(events);
@@ -310,6 +315,7 @@ int aie2_error_async_events_alloc(struct amdxdna_dev_hdl *ndev)
 	struct async_events *events;
 	int i, ret;
 
+	printk(KERN_ERR "vs- aie2_error_async_events_alloc\n");
 	events = kzalloc(struct_size(events, event, total_col), GFP_KERNEL);
 	if (!events)
 		return -ENOMEM;
@@ -340,6 +346,7 @@ int aie2_error_async_events_alloc(struct amdxdna_dev_hdl *ndev)
 		e->size = ASYNC_BUF_SIZE;
 		e->resp.status = MAX_AIE2_STATUS_CODE;
 		INIT_WORK(&e->work, aie2_error_worker);
+		printk(KERN_ERR "vs- inside event loop cnt %d \n", i);
 	}
 
 	ndev->async_events = events;
