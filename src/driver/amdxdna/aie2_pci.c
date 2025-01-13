@@ -645,9 +645,15 @@ static void aie2_fini(struct amdxdna_dev *xdna)
 {
 	struct pci_dev *pdev = to_pci_dev(xdna->ddev.dev);
 	struct amdxdna_dev_hdl *ndev = xdna->dev_handle;
+	int is_event_trace_supported = aie2_is_event_trace_supported_on_dev(ndev);
+
+	if (ndev->dev_status >= AIE2_DEV_START && is_event_trace_supported)
+		aie2_stop_event_trace_send(ndev);
 
 	aie2_hw_stop(xdna);
 	aie2_error_async_events_free(ndev);
+	if (is_event_trace_supported)
+		aie2_event_trace_free(ndev);
 #ifdef AMDXDNA_DEVEL
 	if (iommu_mode != AMDXDNA_IOMMU_PASID)
 		goto skip_pasid;

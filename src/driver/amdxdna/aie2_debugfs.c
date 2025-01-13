@@ -263,6 +263,45 @@ static int aie2_dpm_level_get(struct seq_file *m, void *unused)
 
 AIE2_DBGFS_FOPS(dpm_level, aie2_dpm_level_get, aie2_dpm_level_set);
 
+//write debufs for event trace
+static ssize_t aie2_event_trace_write(struct file *file, const char __user *ptr,
+				size_t len, loff_t *off)
+{
+	struct amdxdna_dev_hdl *ndev = file_to_ndev_rw(file);
+	u32 val;
+	int ret;
+
+	ret = kstrtouint_from_user(ptr, len, 2, &val);
+	if (ret) {
+		XDNA_ERR(ndev->xdna, "Invalid input value: %d", val);
+		return ret;
+	}
+
+	mutex_lock(&ndev->xdna->dev_lock);
+	aie2_assign_event_trace_state(ndev, val);
+	mutex_unlock(&ndev->xdna->dev_lock);
+
+	return len;
+}
+
+static int aie2_event_trace_show(struct seq_file *m, void *unused)
+{
+	struct amdxdna_dev_hdl *ndev = m->private;
+
+	switch (ndev->event_trace_enabled)
+	{
+		case EVENT_TRACE_ENABLED:
+			seq_puts(m, "Event trace is enabled with FW logging\n");
+			break;
+		default:
+			seq_puts(m, "Event trace is disabled\n echo 1 > event trace to enable with FW logging\n");
+			break;
+	}
+	return 0;
+}
+
+AIE2_DBGFS_FOPS(event_trace, aie2_event_trace_show, aie2_event_trace_write);
+
 static int test_case01(struct amdxdna_dev_hdl *ndev)
 {
 	int ret;
@@ -573,6 +612,7 @@ const struct {
 	AIE2_DBGFS_FILE(telemetry_error_info, 0400),
 	AIE2_DBGFS_FILE(telemetry_profiling, 0400),
 	AIE2_DBGFS_FILE(telemetry_debug, 0400),
+	AIE2_DBGFS_FILE(event_trace, 0600),
 };
 
 void aie2_debugfs_init(struct amdxdna_dev *xdna)
